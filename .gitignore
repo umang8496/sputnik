@@ -1,0 +1,47 @@
+# ---- secrets ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ---- LLM run artifacts ----
+# runs.jsonl
+# *.runs.jsonl
+.cache/
+llm_cache/
+
+# ---- python ----
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ---- virtual envs ----
+.venv/
+venv/
+env/
+
+# ---- notebooks ----
+.ipynb_checkpoints/
+
+# ---- editors / OS ----
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.swp
+
+# ---- local scratch ----
+*.bak
+*.log.tmp
