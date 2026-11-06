@@ -1,0 +1,136 @@
+{
+  "incident_id": "INC-003",
+  "service": "payments",
+  "alert": "CRITICAL: payments-api card authorization success rate below 90% for 5m (acquirer-gw upstream errors)",
+  "root_cause": "Deploy payments-api 2024.06.17-2 pinned the acquirer-gw truststore to acquirer-ca-2023.pem, whose leaf certificate expired on 2024-06-17, so every TLS handshake to the acquirer fails.",
+  "suspected_component": "acquirer-gw-client",
+  "severity": "sev1",
+  "trigger_event": {
+    "level": "INFO",
+    "component": "config-loader",
+    "message": "truststore reloaded: upstream=acquirer-gw path=/etc/payments/trust/acquirer-ca-2023.pem pinned=true release=2024.06.17-2"
+  },
+  "error_signature": "TLS_CERT_EXPIRED",
+  "error_lines": [
+    {
+      "level": "ERROR",
+      "component": "acquirer-gw-client",
+      "message": "TLS_CERT_EXPIRED: handshake failed host=gw.acquirer.example.net notAfter=2024-06-17T00:00:00Z"
+    },
+    {
+      "level": "ERROR",
+      "component": "auth-worker",
+      "message": "authorization failed txn_id=tx-{n} reason=upstream TLS_CERT_EXPIRED"
+    },
+    {
+      "level": "ERROR",
+      "component": "acquirer-gw-client",
+      "message": "TLS_CERT_EXPIRED: retry {n}/3 exhausted host=gw.acquirer.example.net"
+    },
+    {
+      "level": "ERROR",
+      "component": "checkout-api",
+      "message": "payment declined to client code=503 cause=TLS_CERT_EXPIRED upstream=acquirer-gw"
+    },
+    {
+      "level": "ERROR",
+      "component": "auth-worker",
+      "message": "circuit breaker OPEN upstream=acquirer-gw after TLS_CERT_EXPIRED failures={n}"
+    }
+  ],
+  "noise_lines": [
+    {
+      "level": "INFO",
+      "component": "payments-api",
+      "message": "health check ok latency_ms={n}"
+    },
+    {
+      "level": "DEBUG",
+      "component": "ledger-writer",
+      "message": "batch flushed rows={n}"
+    },
+    {
+      "level": "INFO",
+      "component": "checkout-api",
+      "message": "session cache hit ratio 0.{n}"
+    },
+    {
+      "level": "WARN",
+      "component": "redis-cache",
+      "message": "slow command GET took {n}ms"
+    },
+    {
+      "level": "INFO",
+      "component": "fraud-scorer",
+      "message": "model v3.2.{n} loaded"
+    },
+    {
+      "level": "DEBUG",
+      "component": "auth-worker",
+      "message": "queue depth {n}"
+    },
+    {
+      "level": "INFO",
+      "component": "payments-api",
+      "message": "scheduled job reconcile-daily started"
+    },
+    {
+      "level": "WARN",
+      "component": "ledger-writer",
+      "message": "disk usage 81% on /var/lib/ledger"
+    },
+    {
+      "level": "INFO",
+      "component": "api-gateway",
+      "message": "rate limit config unchanged"
+    },
+    {
+      "level": "DEBUG",
+      "component": "checkout-api",
+      "message": "cart validation passed items={n}"
+    },
+    {
+      "level": "INFO",
+      "component": "metrics-agent",
+      "message": "flushed {n} datapoints"
+    },
+    {
+      "level": "WARN",
+      "component": "payments-api",
+      "message": "deprecated header X-Legacy-Client used by {n} requests"
+    },
+    {
+      "level": "INFO",
+      "component": "fraud-scorer",
+      "message": "score request completed in {n}ms"
+    },
+    {
+      "level": "DEBUG",
+      "component": "ledger-writer",
+      "message": "fsync latency {n}ms"
+    },
+    {
+      "level": "INFO",
+      "component": "api-gateway",
+      "message": "TLS handshake ok host=api.partner.example.org"
+    },
+    {
+      "level": "INFO",
+      "component": "auth-worker",
+      "message": "idle workers={n}"
+    },
+    {
+      "level": "WARN",
+      "component": "acquirer-gw-client",
+      "message": "slow response from gw.backup.example.net latency_ms={n}"
+    },
+    {
+      "level": "INFO",
+      "component": "reconcile-job",
+      "message": "settlement file parsed records={n}"
+    }
+  ],
+  "metric": "authorization_success_rate_pct",
+  "metric_baseline": 99.2,
+  "metric_peak": 41.7
+}

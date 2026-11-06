@@ -1,0 +1,12 @@
+{
+  "incident_id": "INC-002",
+  "service": "search",
+  "root_cause": "A config deploy to search-api set SEARCH_RESULT_CACHE_TTL_SECONDS from 300 to 0, so every search result cache entry expired immediately and all queries fell through to the database, causing a cache stampede on db-primary.",
+  "suspected_component": "search-api result cache configuration (SEARCH_RESULT_CACHE_TTL_SECONDS)",
+  "severity": "sev2",
+  "error_signature": "CacheMissStorm",
+  "trigger_line": 1490,
+  "trigger_text": "2026-11-01T10:09:55.600 INFO  [config-loader] config reloaded from deploy rev 7f3a9c2: SEARCH_RESULT_CACHE_TTL_SECONDS 300 -> 0",
+  "first_error_line": 1509,
+  "first_error_ts": "2026-11-01T10:10:03.200000"
+}

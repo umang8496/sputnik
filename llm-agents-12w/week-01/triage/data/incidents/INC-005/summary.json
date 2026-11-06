@@ -1,0 +1,23 @@
+{
+  "service": "notifications-svc",
+  "symptom": "Email notifications fail to deliver for roughly 60% of messages because the email provider rejects requests with HTTP 429 RateLimitExceeded, and the retry queue backlog is growing.",
+  "first_error_ts": "2026-11-01T10:08:50Z",
+  "error_signature": "RateLimitExceeded: provider HTTP 429 on POST /v1/notifications/email (email-sender delivery failed after 3 attempts)",
+  "suspected_component": "config",
+  "severity": "sev1",
+  "evidence": [
+    {
+      "line": 1319,
+      "text": "2026-11-01T10:08:47.200 INFO  [config-loader] applied config change CFG-7741: email_provider.rate_limit_rpm 600 -> 60"
+    },
+    {
+      "line": 1327,
+      "text": "2026-11-01T10:08:50.400 ERROR [api-gateway] POST /v1/notifications/email returned 503 upstream RateLimitExceeded"
+    },
+    {
+      "line": 1349,
+      "text": "2026-11-01T10:08:59.200 ERROR [email-sender] provider response 429 RateLimitExceeded for message_id=msg_630, retry_after=60s"
+    }
+  ],
+  "confidence": 0.85
+}

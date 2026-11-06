@@ -1,0 +1,12 @@
+{
+  "incident_id": "INC-003",
+  "service": "payments",
+  "root_cause": "Deploy payments-api 2024.06.17-2 pinned the acquirer-gw truststore to acquirer-ca-2023.pem, whose leaf certificate expired on 2024-06-17, so every TLS handshake to the acquirer fails.",
+  "suspected_component": "acquirer-gw-client",
+  "severity": "sev1",
+  "error_signature": "TLS_CERT_EXPIRED",
+  "trigger_line": 1122,
+  "trigger_text": "2026-11-01T10:07:28.400 INFO  [config-loader] truststore reloaded: upstream=acquirer-gw path=/etc/payments/trust/acquirer-ca-2023.pem pinned=true release=2024.06.17-2",
+  "first_error_line": 1141,
+  "first_error_ts": "2026-11-01T10:07:36"
+}

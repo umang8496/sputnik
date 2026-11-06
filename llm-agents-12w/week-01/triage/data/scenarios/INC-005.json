@@ -1,0 +1,146 @@
+{
+  "incident_id": "INC-005",
+  "service": "notifications",
+  "alert": "CRITICAL: notifications-svc email delivery failure rate > 25% for 10m (provider HTTP 429 RateLimitExceeded)",
+  "root_cause": "Config change CFG-7741 lowered the outbound rate limit for the email provider from 600 to 60 requests per minute, so requests exceed the provider quota and receive 429 responses.",
+  "suspected_component": "email-provider-rate-limiter",
+  "severity": "sev2",
+  "trigger_event": {
+    "level": "INFO",
+    "component": "config-loader",
+    "message": "applied config change CFG-7741: email_provider.rate_limit_rpm 600 -> 60"
+  },
+  "error_signature": "RateLimitExceeded",
+  "error_lines": [
+    {
+      "level": "ERROR",
+      "component": "email-sender",
+      "message": "provider response 429 RateLimitExceeded for message_id=msg_{n}, retry_after=60s"
+    },
+    {
+      "level": "ERROR",
+      "component": "email-sender",
+      "message": "delivery failed for message_id=msg_{n} after 3 attempts: RateLimitExceeded"
+    },
+    {
+      "level": "WARN",
+      "component": "retry-queue",
+      "message": "retry queue depth {n} exceeds threshold 5000, RateLimitExceeded backlog growing"
+    },
+    {
+      "level": "ERROR",
+      "component": "email-sender",
+      "message": "batch digest job aborted: RateLimitExceeded from upstream provider"
+    },
+    {
+      "level": "ERROR",
+      "component": "api-gateway",
+      "message": "POST /v1/notifications/email returned 503 upstream RateLimitExceeded"
+    }
+  ],
+  "noise_lines": [
+    {
+      "level": "DEBUG",
+      "component": "push-sender",
+      "message": "apns token refresh completed in {n}ms"
+    },
+    {
+      "level": "INFO",
+      "component": "api-gateway",
+      "message": "health check OK from load balancer probe {n}"
+    },
+    {
+      "level": "INFO",
+      "component": "sms-sender",
+      "message": "delivered 1482 messages in last minute"
+    },
+    {
+      "level": "DEBUG",
+      "component": "template-renderer",
+      "message": "rendered template welcome_v3 in {n}ms"
+    },
+    {
+      "level": "INFO",
+      "component": "scheduler",
+      "message": "cron job purge_expired_tokens completed, removed {n} rows"
+    },
+    {
+      "level": "WARN",
+      "component": "db-pool",
+      "message": "connection pool utilization at 78% for notifications_primary"
+    },
+    {
+      "level": "INFO",
+      "component": "metrics-agent",
+      "message": "flushed {n} metric points to collector"
+    },
+    {
+      "level": "DEBUG",
+      "component": "push-sender",
+      "message": "device registry cache hit ratio 0.97"
+    },
+    {
+      "level": "INFO",
+      "component": "api-gateway",
+      "message": "request id propagation enabled for tenant {n}"
+    },
+    {
+      "level": "WARN",
+      "component": "tls-monitor",
+      "message": "certificate for sms-webhook.internal expires in 29 days"
+    },
+    {
+      "level": "INFO",
+      "component": "sms-sender",
+      "message": "carrier latency p50 {n}ms within SLO"
+    },
+    {
+      "level": "DEBUG",
+      "component": "template-renderer",
+      "message": "cache eviction removed {n} entries"
+    },
+    {
+      "level": "INFO",
+      "component": "scheduler",
+      "message": "scheduled digest window opened for tenant {n}"
+    },
+    {
+      "level": "WARN",
+      "component": "api-gateway",
+      "message": "slow response GET /v1/preferences took {n}ms"
+    },
+    {
+      "level": "INFO",
+      "component": "push-sender",
+      "message": "push notifications delivered 9311 in last minute"
+    },
+    {
+      "level": "DEBUG",
+      "component": "config-loader",
+      "message": "config reload check completed, no changes in sms_provider section"
+    },
+    {
+      "level": "INFO",
+      "component": "auth-service",
+      "message": "issued service token for notifications-worker"
+    },
+    {
+      "level": "WARN",
+      "component": "queue-consumer",
+      "message": "consumer lag on topic notif-events partition {n} is {n} messages"
+    },
+    {
+      "level": "INFO",
+      "component": "metrics-agent",
+      "message": "garbage collection pause {n}ms on notifications-worker"
+    },
+    {
+      "level": "DEBUG",
+      "component": "email-sender",
+      "message": "dkim signing key rotation scheduled in 14 days"
+    }
+  ],
+  "metric": "email_delivery_success_rate",
+  "metric_baseline": 99.2,
+  "metric_peak": 41.5
+}

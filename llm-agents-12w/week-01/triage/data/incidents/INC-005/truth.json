@@ -1,0 +1,12 @@
+{
+  "incident_id": "INC-005",
+  "service": "notifications",
+  "root_cause": "Config change CFG-7741 lowered the outbound rate limit for the email provider from 600 to 60 requests per minute, so requests exceed the provider quota and receive 429 responses.",
+  "suspected_component": "email-provider-rate-limiter",
+  "severity": "sev2",
+  "error_signature": "RateLimitExceeded",
+  "trigger_line": 1319,
+  "trigger_text": "2026-11-01T10:08:47.200 INFO  [config-loader] applied config change CFG-7741: email_provider.rate_limit_rpm 600 -> 60",
+  "first_error_line": 1327,
+  "first_error_ts": "2026-11-01T10:08:50.400000"
+}

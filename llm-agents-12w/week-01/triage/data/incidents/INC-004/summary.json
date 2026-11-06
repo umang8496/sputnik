@@ -1,0 +1,31 @@
+{
+  "service": "auth-api",
+  "symptom": "Login requests fail and latency rises as auth-api pods are OOMKilled and restart in a crashloop in prod-us-east-1.",
+  "first_error_ts": "2026-11-01T10:07:37Z",
+  "error_signature": "OOMKilled: heap usage 1973MB exceeded container limit during session lookup, process terminated",
+  "suspected_component": "session-cache",
+  "severity": "sev1",
+  "evidence": [
+    {
+      "line": 1121,
+      "text": "2026-11-01T10:07:28.000 INFO  [session-cache] deploy applied: session-cache backend switched to UnboundedMap (eviction_policy=none, max_entries=unlimited) in release 3.14.0"
+    },
+    {
+      "line": 1144,
+      "text": "2026-11-01T10:07:37.200 ERROR [liveness-probe] Liveness probe failed for auth-api-7d9f6c5b8-58, restarting container after OOMKilled event"
+    },
+    {
+      "line": 1175,
+      "text": "2026-11-01T10:07:49.600 ERROR [session-cache] cache size 48213768 entries, eviction_count=0 since process start, heap pressure critical"
+    },
+    {
+      "line": 1187,
+      "text": "2026-11-01T10:07:54.400 ERROR [kubelet] Container auth-api in pod auth-api-7d9f6c5b8-15 terminated: reason=OOMKilled exitCode=137 memoryLimit=2Gi"
+    },
+    {
+      "line": 1230,
+      "text": "2026-11-01T10:08:11.600 ERROR [auth-api] OOMKilled: heap usage 1973MB exceeded container limit during session lookup, process terminated"
+    }
+  ],
+  "confidence": 0.85
+}

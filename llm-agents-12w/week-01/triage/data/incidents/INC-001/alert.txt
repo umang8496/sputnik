@@ -1,0 +1,1 @@
+PAGE: checkout-api p99_latency_ms > 2500 for 5m (SLO breach), error rate 14% on POST /v1/orders, region us-east-1

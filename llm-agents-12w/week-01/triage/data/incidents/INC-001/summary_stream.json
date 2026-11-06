@@ -1,0 +1,23 @@
+{
+  "service": "checkout-api",
+  "symptom": "POST /v1/orders and payment-intent lookups fail or time out with 503 errors (about 14% error rate) and p99 latency rises above 2500 ms in us-east-1.",
+  "first_error_ts": "2026-11-01T10:07:12Z",
+  "error_signature": "PoolTimeout: failed to acquire connection within 3000ms (active=4/4) in db-pool, surfacing as 503 upstream PoolTimeout while creating order",
+  "suspected_component": "db-pool",
+  "severity": "sev2",
+  "evidence": [
+    {
+      "line": 1081,
+      "text": "2026-11-01T10:07:12.000 ERROR [order-service] POST /v1/orders failed with 503: upstream PoolTimeout while creating order cart_id=998"
+    },
+    {
+      "line": 1089,
+      "text": "2026-11-01T10:07:15.200 ERROR [db-pool] PoolTimeout: failed to acquire connection within 3000ms (waiters=537, active=4/4)"
+    },
+    {
+      "line": 1069,
+      "text": "2026-11-01T10:07:07.200 INFO  [config-loader] Applied config rev 7f3a91c: db.pool.max_connections changed 40 -> 4 (source=deploy-pipeline, actor=ci-bot)"
+    }
+  ],
+  "confidence": 0.85
+}
