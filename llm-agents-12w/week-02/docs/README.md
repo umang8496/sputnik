@@ -45,7 +45,8 @@ The model is treated as a dependency with four properties that every LLM system 
 
 Section 6 measures all of it (tokens, cost, latency, accuracy) so every design choice is backed by a number, not a belief.
 
-Week 2 is about **leveraging the LLM effectively**. Serving many clients (API service, webhooks, queues, concurrency limits) is weeks 11-12; those weeks reuse every idea here at a larger scale.
+Week 2 is about **leveraging the LLM effectively**.  
+Serving many clients (API service, webhooks, queues, concurrency limits) is weeks 11-12; those weeks reuse every idea here at a larger scale.
 
 ### 0.2 What `triage summarize` v2 adds over v1
 
@@ -158,7 +159,8 @@ Thousands of lines become roughly 25 groups.
 
 **The trap in this dataset.**  
 The plan says "keep ERROR/WARN". In `gen_incidents.py`, the root cause is `trigger_event`: a single **INFO** line (a deploy or config change).  
-A level filter deletes the answer. The fix: keep every WARN/ERROR signature **plus every rare signature** (count ≤ 3) at any level. A change that happens once is rare, so it survives.
+A level filter deletes the answer.  
+The fix: keep every WARN/ERROR signature **plus every rare signature** (count ≤ 3) at any level. A change that happens once is rare, so it survives.
 
 ```python
 # src/triage/prefilter.py
@@ -276,17 +278,27 @@ Test that with ground truth, as `truth.json` does here. In week 6 (RAG) the same
 
 The Messages API is **stateless**. Every request carries the entire prompt, and the model reads all of it from token 1, every time.
 
-Concrete case: INC-001 raw is ~90k tokens. In week 3 the agent calls the model ~10 times on the same incident. Each call resends those 90k tokens plus the growing history. The model re-reads the identical 90k ten times: ~900k input tokens billed and ten long waits before the first output token, all to redo work it already did.
+Concrete case: INC-001 raw is ~90k tokens.  
+In week 3 the agent calls the model ~10 times on the same incident. Each call resends those 90k tokens plus the growing history.  
+The model re-reads the identical 90k ten times: ~900k input tokens billed and ten long waits before the first output token, all to redo work it already did.
 
 ### 2.2 What "reading the prompt" costs: prefill and the KV cache
 
-Before writing a single output token, the model runs every input token through all its layers. For each token, each layer produces two internal vectors, a **key** and a **value**, that later tokens attend to. This phase is **prefill**. It is the cost behind input-token pricing and the delay before the first output token (time to first token). The result is the **KV cache**: the model's processed memory of the prompt.
+Before writing a single output token, the model runs every input token through all its layers.  
+For each token, each layer produces two internal vectors, a **key** and a **value**, that later tokens attend to.  
+This phase is **prefill**.  
+It is the cost behind input-token pricing and the delay before the first output token (time to first token).  
+The result is the **KV cache**: the model's processed memory of the prompt.
 
-Key property: token 500's vectors depend only on tokens 1-500, never on what comes after. So if two prompts share their first 90k tokens exactly, the processed state for those 90k tokens is identical and can be reused. That is why caching works on **prefixes**, and only on prefixes.
+Key property: token 500's vectors depend only on tokens 1-500, never on what comes after.  
+So if two prompts share their first 90k tokens exactly, the processed state for those 90k tokens is identical and can be reused.  
+That is why caching works on **prefixes**, and only on prefixes.
 
 ### 2.3 What prompt caching is, and who does what
 
-Prompt caching: Anthropic's servers keep the processed state of a prompt prefix for a short time. When the next request starts with the same bytes, they load it instead of recomputing it, and prefill runs only on the new part at the end. The output is unchanged; only cost and latency change.
+Prompt caching: Anthropic's servers keep the processed state of a prompt prefix for a short time.  
+When the next request starts with the same bytes, they load it instead of recomputing it, and prefill runs only on the new part at the end.  
+The output is unchanged; only cost and latency change.
 
 | Actor               | Responsibility                                                                                                      |
 |---------------------|---------------------------------------------------------------------------------------------------------------------|
@@ -298,7 +310,8 @@ Caching is **opt-in** on the Claude API. Without a marker nothing is stored. Pro
 
 ### 2.4 How the client asks for caching: wire format
 
-There is no separate cache endpoint and no special header. One field on a content block: `"cache_control": {"type": "ephemeral"}`. It means "everything up to and including this block is worth storing".
+There is no separate cache endpoint and no special header.  
+One field on a content block: `"cache_control": {"type": "ephemeral"}`. It means "everything up to and including this block is worth storing".
 
 **Python**
 
@@ -388,8 +401,11 @@ Documented behavior. The exact storage internals (hash function, where state liv
    - Hit: load the stored processed state; skip prefill for those tokens.
    - Miss: walk **backward up to 20 content blocks** looking for a shorter prefix stored earlier at a position where an earlier request placed a marker; reuse it if found.
 5. **Prefill the remainder**: the uncached tail, or everything on a full miss.
-6. **Store** the new prefix if it was not already stored, but only if it is at least the model's **minimum cacheable length** (512 tokens on the 5.5 models). Below that, nothing is stored and no error is raised.
-7. **Start or refresh the timer**: 5 minutes (or 1 hour with `"ttl": "1h"`), measured from the **start** of the request. Every hit resets it to the full TTL at no cost. The entry becomes readable once this response **starts streaming**; parallel requests sent at the same instant all miss.
+6. **Store** the new prefix if it was not already stored, but only if it is at least the model's **minimum cacheable length** (512 tokens on the 5.5 models).  
+  Below that, nothing is stored and no error is raised.
+7. **Start or refresh the timer**: 5 minutes (or 1 hour with `"ttl": "1h"`), measured from the **start** of the request.  
+  Every hit resets it to the full TTL at no cost.  
+  The entry becomes readable once this response **starts streaming**; parallel requests sent at the same instant all miss.
 8. **Generate** the output exactly as without caching.
 9. **Report** in `usage` and bill each part at its own rate.
 
@@ -407,7 +423,8 @@ total prompt tokens = cache_read_input_tokens + cache_creation_input_tokens + in
 | `cache_creation_input_tokens` | Processed now **and** saved as a new entry                 | 1.25x (5m) / 2x (1h) → $0.125/M / $0.20/M |
 | `input_tokens`                | Processed now, not saved: everything after the last marker | 1x → $0.10/M                              |
 
-`input_tokens` alone is **not** the prompt size once caching is on; it is only the uncached tail. The week 1 `cost_usd()` already prices the three counters separately.
+`input_tokens` alone is **not** the prompt size once caching is on; it is only the uncached tail.  
+The week 1 `cost_usd()` already prices the three counters separately.
 
 ### 2.7 Worked timeline: one incident, several requests
 
@@ -446,7 +463,10 @@ Diagnosis from the counters:
 | Opus 4.7, Haiku 3.5                                                    | 2048 tokens |
 | Opus 4.6, Opus 4.5, Haiku 4.5                                          | 4096 tokens |
 
-**The trap in our code.** The plan says "cache the system prompt". Our `SYSTEM` is ~150 tokens, under 512, so a marker there silently does nothing. The block worth caching is the **incident block** (system + alert + logs + metrics). It is identical for every call about the same incident:
+**The trap in our code.** The plan says "cache the system prompt".  
+Our `SYSTEM` is ~150 tokens, under 512, so a marker there silently does nothing.  
+The block worth caching is the **incident block** (system + alert + logs + metrics).  
+It is identical for every call about the same incident:
 
 - the second run of the done-check,
 - the validation-retry (Section 3), which resends the whole incident plus an error message,
@@ -480,20 +500,23 @@ Our code has none of these. Keep `run_id` in `runs.jsonl` only.
 
 ### 2.9 How the cache key is computed
 
-Anthropic does not publish the algorithm. What is documented is what the key **depends on**, which is all you need:
+Anthropic does not publish the algorithm.  
+What is documented is what the key **depends on**, which is all you need:
 
-1. The exact content up to the marker, rendered tools → system → messages. Every byte counts: text, images, tool definitions, `tool_use`/`tool_result` blocks, whitespace, JSON key order inside tool schemas.
+1. The exact content up to the marker, rendered tools → system → messages.  
+  Every byte counts: text, images, tool definitions, `tool_use`/`tool_result` blocks, whitespace, JSON key order inside tool schemas.
 2. The model.
 3. The workspace (Claude API).
 4. Some request settings, by tier (table above).
 
 Mental model, not the real implementation:
 
-```
+```text
 key = H(model, workspace, settings, tokens[1 .. marker])
 ```
 
-You do not need the hash. Make the request bytes deterministic: `json.dumps(..., sort_keys=True)`, fixed tool order, no clock or ids in the prefix, model and effort pinned per route.
+You do not need the hash.  
+Make the request bytes deterministic: `json.dumps(..., sort_keys=True)`, fixed tool order, no clock or ids in the prefix, model and effort pinned per route.
 
 ### 2.10 Economics
 
@@ -503,7 +526,8 @@ You do not need the hash. Make the request bytes deterministic: `json.dumps(...,
 | Cache write, 1-hour | 2x                                                |
 | Cache read          | ~0.1x (Haiku/Sonnet 5.5 class; 0.05x on Opus 5.5) |
 
-Break-even: with the 5-minute TTL, **two** requests already win (1.25 + 0.1 = 1.35 vs 2.0 uncached). With the 1-hour TTL, three or more (2 + 0.1 + 0.1 = 2.2 vs 3.0).
+Break-even: with the 5-minute TTL, **two** requests already win (1.25 + 0.1 = 1.35 vs 2.0 uncached).  
+With the 1-hour TTL, three or more (2 + 0.1 + 0.1 = 2.2 vs 3.0).
 
 On the INC-001 numbers (Haiku 5.5, $0.10/M input, 90k-token prefix):
 
@@ -559,9 +583,11 @@ def test_second_call_reads_cache():                     # integration test, cost
 ### 2.12 Optimizations on top of prompt caching
 
 1. **Measure the hit rate**: `read / (read + creation + input)` per tag in `runs.jsonl`. Without it every other item is a guess.
-2. **Append-only history**: never edit or delete earlier messages in an agent loop. To change instructions mid-run, append a `{"role": "system", ...}` message to `messages` instead of editing top-level `system` (supported on Opus 5.5, Sonnet 5.5, Haiku 5.5); the cached prefix survives.
+2. **Append-only history**: never edit or delete earlier messages in an agent loop.  
+  To change instructions mid-run, append a `{"role": "system", ...}` message to `messages` instead of editing top-level `system` (supported on Opus 5.5, Sonnet 5.5, Haiku 5.5); the cached prefix survives.
 3. **Pin model and effort per route**: switching either means a cold cache.
-4. **Two markers in agent loops**: one explicit marker at the end of tools + system, plus top-level automatic caching for the growing tail. If one turn adds more than ~15 blocks, add an intermediate marker (the lookback reaches only 20 blocks).
+4. **Two markers in agent loops**: one explicit marker at the end of tools + system, plus top-level automatic caching for the growing tail.  
+  If one turn adds more than ~15 blocks, add an intermediate marker (the lookback reaches only 20 blocks).
 5. **Choose the TTL from the gap between calls**:
 
    | Start-to-start gap on the same prefix | TTL     |
@@ -582,7 +608,8 @@ Two different layers:
 | Prompt caching   | The model's processing of the input | Anthropic's server | Most input cost, part of the latency; model still generates |
 | Response caching | The final output                    | Your application   | The whole call: $0, ~1 ms                                   |
 
-**Valid only when** the same input should get the same answer and a stale answer is acceptable. Re-running `triage summarize INC-001` on unchanged logs: yes. A chat whose context differs per user: no.
+**Valid only when** the same input should get the same answer and a stale answer is acceptable.  
+Re-running `triage summarize INC-001` on unchanged logs: yes. A chat whose context differs per user: no.
 
 The key must include everything that affects the output:
 
@@ -616,7 +643,8 @@ if not check_citations(summary, folder):           # store only VALIDATED result
 | TTL or invalidation rule        | Hashing the input makes new log lines a new key automatically      |
 | Disable in evals (`--no-cache`) | Evals need fresh samples to measure run-to-run variance (week 9)   |
 
-**Semantic caching** (embed the query, serve the answer of a *similar* past query) fits FAQ-type questions with one canonical answer. Avoid it for triage: two incidents with similar alerts and different root causes would get the same answer, a confident wrong result.
+**Semantic caching** (embed the query, serve the answer of a *similar* past query) fits FAQ-type questions with one canonical answer.  
+Avoid it for triage: two incidents with similar alerts and different root causes would get the same answer, a confident wrong result.
 
 Order of savings: response-cache hit (whole call skipped) > prompt-cache read (~90% of input saved) > filtering (fewer tokens) > cheaper model or lower effort (trades quality).
 
@@ -626,7 +654,9 @@ Order of savings: response-cache hit (whole call skipped) > prompt-cache read (~
 
 ### 3.1 Why it is needed
 
-Every `call()` is a network request to a shared, rate-limited service. On a busy day some calls fail even with perfect code. A CLI that crashes with a stack trace on the 4th of 5 incidents is unusable; so is one that retries forever.
+Every `call()` is a network request to a shared, rate-limited service.  
+On a busy day some calls fail even with perfect code.  
+A CLI that crashes with a stack trace on the 4th of 5 incidents is unusable; so is one that retries forever.
 
 ### 3.2 Two families of failure
 
@@ -650,7 +680,8 @@ Every `call()` is a network request to a shared, rate-limited service. On a busy
 | 529  | `InternalServerError` (type `overloaded_error`) | API busy for everyone       | Yes, with backoff                   |
 | —    | `APIConnectionError` / `APITimeoutError`        | Network failure or timeout  | Yes                                 |
 
-Rule: **4xx means you are wrong; retrying is useless. 429, 5xx and network errors are temporary; retry.** Every `APIStatusError` also exposes `.type` (for example `"overloaded_error"`) to classify by name.
+Rule: **4xx means you are wrong; retrying is useless. 429, 5xx and network errors are temporary; retry.**  
+Every `APIStatusError` also exposes `.type` (for example `"overloaded_error"`) to classify by name.
 
 ### 3.4 What the SDK already does
 
@@ -676,11 +707,13 @@ client = anthropic.Anthropic(timeout=anthropic.Timeout(60.0, read=30.0, write=10
 client.with_options(timeout=10.0, max_retries=0).messages.count_tokens(...)
 ```
 
-**Backoff, concretely:** wait ~0.5 s, 1 s, 2 s, 4 s (doubling), each with random jitter. Jitter matters: after an outage, 1,000 clients retrying at exactly t+1 s would knock the API over again (**thundering herd**). Random spread avoids it.
+**Backoff, concretely:** wait ~0.5 s, 1 s, 2 s, 4 s (doubling), each with random jitter.  
+Jitter matters: after an outage, 1,000 clients retrying at exactly t+1 s would knock the API over again (**thundering herd**). Random spread avoids it.
 
 ### 3.5 CLI error handling and exit codes
 
-An exception that reaches your code means the SDK's retries are used up. Catch most-specific first; print one line; exit with a meaningful code.
+An exception that reaches your code means the SDK's retries are used up.  
+Catch most-specific first; print one line; exit with a meaningful code.
 
 ```python
 # src/triage/cli.py
@@ -724,7 +757,8 @@ def summarize_cmd(incident: str, mode: str = "filtered"):
 
 ### 3.6 Family B: validation-retry, once
 
-The model returned something, but it fails `check_citations()`. Send the exact problems back **once**, then stop.
+The model returned something, but it fails `check_citations()`.  
+Send the exact problems back **once**, then stop.
 
 ```python
 # src/triage/summarize.py
@@ -764,7 +798,8 @@ With `timeout=60, max_retries=4` and one validation-retry, one `triage summarize
 worst-case time ≈ 10 × 60 s + backoff (~7.5 s per logical call) ≈ 10.5 minutes
 ```
 
-Every retry layer (SDK retries, validation-retry, later agent steps) multiplies requests, cost and wall-clock. Set an explicit budget at each layer.
+Every retry layer (SDK retries, validation-retry, later agent steps) multiplies requests, cost and wall-clock.  
+Set an explicit budget at each layer.
 
 ### 3.8 Forced-failure tests
 
@@ -811,9 +846,13 @@ ANTHROPIC_BASE_URL=http://127.0.0.1:8529 triage summarize INC-001
 
 You can only judge a prompt by measuring its outputs, and a measurement is useless unless you know exactly which prompt produced it.
 
-**Step 1: prompts behave like code, without a compiler or tests.** A bug in Python fails loudly (exception, red test). A worse prompt fails silently: the output is still valid JSON that passes the schema, but the root cause is wrong. The only way to know is to run it on incidents and score the results.
+**Step 1: prompts behave like code, without a compiler or tests.** A bug in Python fails loudly (exception, red test).  
+  A worse prompt fails silently: the output is still valid JSON that passes the schema, but the root cause is wrong.  
+  The only way to know is to run it on incidents and score the results.
 
-**Step 2: outputs vary run to run.** The same prompt on INC-003 can be right 4 times out of 5. One run proves nothing; you compare distributions ("v1: 13/15 over 3 runs, v2: 9/15"). That needs every result row tagged with the prompt that produced it.
+**Step 2: outputs vary run to run.** The same prompt on INC-003 can be right 4 times out of 5.  
+  One run proves nothing; you compare distributions ("v1: 13/15 over 3 runs, v2: 9/15").  
+  That needs every result row tagged with the prompt that produced it.
 
 **Step 3: without the tag, the data cannot answer anything.**
 
@@ -826,7 +865,7 @@ The essential part is the **logged identity**; the separate file is the convenie
 
 ### 4.2 The convention
 
-```
+```text
 prompts/
   summarize.raw.v1.md          # SYSTEM for raw mode, frozen
   summarize.filtered.v1.md     # SYSTEM for filtered mode ("cite the last tab field")
@@ -905,7 +944,8 @@ Long term, `v1 → v2 → v3` with scores is a written record of which wording f
 | Diffs read as prose       | A PR changing `summarize.v2.md` is reviewable by people who do not read Python           |
 | Runtime swap              | A service can choose the version from config or a registry without redeploying (week 11) |
 
-Honest trade-off: for a solo learning project, a string in code is acceptable **if** its hash and the git commit are logged on every row. The file convention costs almost nothing and makes week 9 direct.
+Honest trade-off: for a solo learning project, a string in code is acceptable **if** its hash and the git commit are logged on every row.  
+The file convention costs almost nothing and makes week 9 direct.
 
 Industry equivalent: prompt registries in LangSmith and Langfuse (week 9) store prompts as versioned objects fetched at runtime and linked to traces.
 
@@ -932,7 +972,8 @@ In practice: 2-3 live versions per task; a real product has tens to a few hundre
 
 ### 4.7 How prompts help in tests
 
-**Layer 1: deterministic tests on the prompt itself** (pytest; free, except `count_tokens` which is also free). Each guards a silent failure from earlier sections.
+**Layer 1: deterministic tests on the prompt itself** (pytest; free, except `count_tokens` which is also free).  
+Each guards a silent failure from earlier sections.
 
 ```python
 # tests/test_prompts.py
@@ -962,7 +1003,7 @@ def test_filtered_prompt_fits_budget():
 
 **Layer 2: evals**: the versioned prompt is the **thing under test**; `truth.json` is the expected answer.
 
-```
+```text
 for each incident in the golden set:
     output = run(prompt="summarize.filtered.v2", model, effort, incident)
     correct = output.error_signature == truth.error_signature and citations valid
@@ -985,7 +1026,10 @@ This week you change the prompt yourself at least twice:
 2. Section 3 adds the validation-retry message: new prompt text that appears only on attempt 2.
 3. While testing, wording gets tweaked when a citation fails: v2.
 
-The week 2 deliverable is a raw vs filtered comparison table. `runs.jsonl` will hold rows from all these variants. Without `prompt_version`, the table silently averages a broken v1 with a fixed v2, and "filtered is better" might really mean "the newer prompt is better". **The table is only valid if every row says which prompt produced it.** It also explains log anomalies: a jump in `cache_creation_input_tokens` lines up with the row where `prompt_sha` changed (new bytes, cold cache).
+The week 2 deliverable is a raw vs filtered comparison table. `runs.jsonl` will hold rows from all these variants.  
+Without `prompt_version`, the table silently averages a broken v1 with a fixed v2, and "filtered is better" might really mean "the newer prompt is better".  
+**The table is only valid if every row says which prompt produced it.**  
+It also explains log anomalies: a jump in `cache_creation_input_tokens` lines up with the row where `prompt_sha` changed (new bytes, cold cache).
 
 ---
 
@@ -993,13 +1037,15 @@ The week 2 deliverable is a raw vs filtered comparison table. `runs.jsonl` will 
 
 ### 5.1 Why it exists: sync vs async
 
-Every call so far was **synchronous**: send, wait seconds, get the answer. You pay full price for that immediacy. Much LLM work has nobody waiting:
+Every call so far was **synchronous**: send, wait seconds, get the answer.  
+You pay full price for that immediacy. Much LLM work has nobody waiting:
 
 - running all 30 incidents × 3 runs for an eval (week 9),
 - regenerating scenarios,
 - summarizing yesterday's 2,000 tickets overnight.
 
-For that work speed is worth nothing and price is everything. The Batches API runs a list of normal Messages requests asynchronously at **50% of the normal price on every token**.
+For that work speed is worth nothing and price is everything.  
+The Batches API runs a list of normal Messages requests asynchronously at **50% of the normal price on every token**.
 
 | Someone waiting on the answer?                         | Use                             |
 |--------------------------------------------------------|---------------------------------|
@@ -1054,7 +1100,8 @@ A submitted batch cannot be modified, only canceled.
 
 Each request is `{custom_id, params}`; `params` is exactly a normal Messages request body.
 
-**`custom_id` rules:** 1-64 characters, only letters, digits, `-` and `_` (`^[a-zA-Z0-9_-]{1,64}$`). An id like `INC-001|summarize.filtered.v1` is **invalid** (`|` and `.` are not allowed). Use `INC-001__filtered-v1`, or keep a local map from id to metadata.
+**`custom_id` rules:** 1-64 characters, only letters, digits, `-` and `_` (`^[a-zA-Z0-9_-]{1,64}$`).  
+An id like `INC-001|summarize.filtered.v1` is **invalid** (`|` and `.` are not allowed). Use `INC-001__filtered-v1`, or keep a local map from id to metadata.
 
 **Wire format**
 
@@ -1211,7 +1258,8 @@ for res in client.messages.batches.results(batch.id):        # streamed, any ord
             resubmit.append(inc)
 ```
 
-The batch produces no summary report of its own. **The report is what you build** from these lines: each succeeded line becomes a `runs.jsonl` row (tokens, cost at 50%, `batch: true`, prompt version, validation outcome), and those rows feed the Section 6 table.
+The batch produces no summary report of its own.  
+**The report is what you build** from these lines: each succeeded line becomes a `runs.jsonl` row (tokens, cost at 50%, `batch: true`, prompt version, validation outcome), and those rows feed the Section 6 table.
 
 ### 5.7 Rules that follow from the mechanics
 
@@ -1240,7 +1288,9 @@ Pennies here; the same ratio decides real budgets for week 9's 30 incidents × 3
 
 ### 6.1 Why
 
-Sections 1-5 each make a claim: filtering is cheaper and as accurate, caching cuts cost, retries make the CLI robust. Claims are beliefs until measured. The week ends with one table that proves or disproves them on your own incidents. Every later week ends the same way, in `notes/wNN.md`.
+Sections 1-5 each make a claim: filtering is cheaper and as accurate, caching cuts cost, retries make the CLI robust.  
+Claims are beliefs until measured. The week ends with one table that proves or disproves them on your own incidents.  
+Every later week ends the same way, in `notes/wNN.md`.
 
 ### 6.2 Experiment design
 
@@ -1302,7 +1352,8 @@ Below the table:
 
 - **Failure tests**: bad key → exit 2, no retries; fake 529 → 5 hits, then exit 3.
 - **Batch run**: 5 incidents, cost vs the sync run (≈ 50%), time to `ended`.
-- **One-sentence conclusion** (required by the plan), for example: *"Raw stuffing is worse when the cause is one line among thousands of repeated ones: filtering cut cost ~20x and latency ~4x with equal or better accuracy; raw only makes sense when the input is small or the cause is spread across many unique lines the filter would drop."*
+- **One-sentence conclusion** (required by the plan), for example:  
+  *"Raw stuffing is worse when the cause is one line among thousands of repeated ones: filtering cut cost ~20x and latency ~4x with equal or better accuracy; raw only makes sense when the input is small or the cause is spread across many unique lines the filter would drop."*
 
 ### 6.6 Done check (from the plan)
 
@@ -1313,7 +1364,8 @@ Below the table:
 
 ### 6.7 What this week amounts to
 
-`triage summarize` v2 is a component you can put numbers on: bounded input, known cost per incident, cached, robust to API failures, every result traceable to a prompt version. Week 3 builds the agent loop on top: every step resends the history (caching), calls tools that can fail (retries and `is_error`), and is judged by the same kind of table.
+`triage summarize` v2 is a component you can put numbers on: bounded input, known cost per incident, cached, robust to API failures, every result traceable to a prompt version.  
+Week 3 builds the agent loop on top: every step resends the history (caching), calls tools that can fail (retries and `is_error`), and is judged by the same kind of table.
 
 ---
 
@@ -1386,22 +1438,34 @@ Docs to read (Claude): Prompt caching, Token counting, Batch processing, Long co
 ## 10. Q&A from the sessions
 
 **Q1. The long-input strategy changes with the problem, doesn't it?**
-Yes. The specific filter (signature collapse) is domain-specific. What carries over is the four-step pattern: measure, reduce in code what code can reduce exactly, keep pointers back to the source, escalate only when needed. Only step 2 changes per domain (logs, contracts, code, tickets, metrics; table in §1.8). The universal failure check: can the reducer delete the answer? Test it against ground truth.
+Yes. The specific filter (signature collapse) is domain-specific.  
+What carries over is the four-step pattern: measure, reduce in code what code can reduce exactly, keep pointers back to the source, escalate only when needed.  
+Only step 2 changes per domain (logs, contracts, code, tickets, metrics; table in §1.8).  
+The universal failure check: can the reducer delete the answer? Test it against ground truth.
 
 **Q2. Where would this prefilter hide or drop the real cause?** (Section 1 task)
+
 - The cause is a **frequent** INFO line: for example, after a bad config push the service logs `pool size=5` every minute. Count > 3 and level INFO, so it is dropped.
 - A **high-cardinality** field the normalizer misses (hostnames, hex ids, quoted strings): every line becomes unique, "rare" explodes, and the signal is buried again.
 - The cause is an **absence or a rate change** (a heartbeat stops, throughput halves): counting collapses timing, so the change is invisible.
 - The cause sits in **multi-line stack-trace continuation lines**, which the line regex skips.
 
 **Q3. What is prompt caching, why is it required, who performs it, and how does it work?**
-The API is stateless and re-reads the whole prompt every call; prefill on a 90k-token incident is repeated work. Anthropic's servers store the processed state (KV cache) of a prefix and reuse it when the next request starts with the same bytes. The server does storage, lookup, expiry and billing; the client marks the reusable part and keeps it byte-identical. Full mechanics: §2.1-2.7.
+The API is stateless and re-reads the whole prompt every call; prefill on a 90k-token incident is repeated work.  
+Anthropic's servers store the processed state (KV cache) of a prefix and reuse it when the next request starts with the same bytes.  
+The server does storage, lookup, expiry and billing; the client marks the reusable part and keeps it byte-identical. Full mechanics: §2.1-2.7.
 
 **Q4. How does the client application tell the server to cache?**
-One JSON field on a content block: `"cache_control": {"type": "ephemeral"}` (optionally `"ttl": "1h"`), or the top-level automatic form. No separate endpoint, no header. The SDK passes the field through unchanged. Proof comes back only in `usage`. See §2.4.
+One JSON field on a content block: `"cache_control": {"type": "ephemeral"}` (optionally `"ttl": "1h"`), or the top-level automatic form.  
+No separate endpoint, no header.  
+The SDK passes the field through unchanged. Proof comes back only in `usage`. See §2.4.
 
 **Q5. What exactly does the server do on seeing the marker? What are `cache_creation_input_tokens` and `cache_read_input_tokens`?**
-Render tools → system → messages, fingerprint the prefix up to the marker, look it up (with a 20-block lookback), prefill only the uncached remainder, store the new prefix if ≥ 512 tokens, start or refresh the TTL, generate, report. `cache_creation_input_tokens` = tokens processed now and saved (1.25x/2x); `cache_read_input_tokens` = tokens loaded from a stored entry (~0.1x); `input_tokens` = the uncached tail. The three sum to the full prompt. See §2.5-2.7.
+Render tools → system → messages, fingerprint the prefix up to the marker, look it up (with a 20-block lookback), prefill only the uncached remainder,  
+store the new prefix if ≥ 512 tokens, start or refresh the TTL, generate, report.  
+
+`cache_creation_input_tokens` = tokens processed now and saved (1.25x/2x); `cache_read_input_tokens` = tokens loaded from a stored entry (~0.1x); `input_tokens` = the uncached tail.  
+The three sum to the full prompt.
 
 **Q6. Predict write/read for: A first call; B same request 2 minutes later; C one character of SYSTEM edited; D same as C, 10 minutes later.** (Section 2 task)
 
@@ -1413,37 +1477,54 @@ Render tools → system → messages, fingerprint the prefix up to the marker, l
 | D    | ≈ full prefix                 | 0                         | C's entry expired after 5 minutes                |
 
 **Q7. If I build an agentic system that needs caching, does the server do it all for me?**
-No, not on the Claude API. Caching is opt-in. You add markers, keep the prefix byte-identical, order stable content first, and verify `cache_read_input_tokens > 0`. In an agent: one marker after tools + system, automatic caching for the growing tail, append-only history, no tool reordering, model and effort pinned. Products like Claude Code do this internally.
+No, not on the Claude API.  
+Caching is opt-in. You add markers, keep the prefix byte-identical, order stable content first, and verify `cache_read_input_tokens > 0`.  
+In an agent: one marker after tools + system, automatic caching for the growing tail, append-only history, no tool reordering, model and effort pinned.  
+Products like Claude Code do this internally.
 
 **Q8. What is the logic for computing the cache hash?**
-Not published. The key depends on the exact bytes up to the marker (tools → system → messages), the model, the workspace, and some settings by tier (§2.8 table). Mental model: `H(model, workspace, settings, tokens[1..marker])`. Make the request deterministic and the hash takes care of itself.
+Not published. The key depends on the exact bytes up to the marker (tools → system → messages), the model, the workspace, and some settings by tier (§2.8 table).  
+Mental model: `H(model, workspace, settings, tokens[1..marker])`.  
+Make the request deterministic and the hash takes care of itself.
 
 **Q9. What optimizations can I do on top of caching? Should I also store responses to serve my own clients?**
-On caching: measure hit rate, append-only history, pin model/effort, two markers in loops, pick TTL by call gap, fan-out ordering, pre-warm (§2.12). Response caching is a different layer that skips the call entirely; use it only exact-match, keyed on everything that affects output, storing only validated results, scoped per tenant, disabled in evals. Avoid semantic caching for triage (§2.13).
+On caching: measure hit rate, append-only history, pin model/effort, two markers in loops, pick TTL by call gap, fan-out ordering, pre-warm (§2.12).  
+Response caching is a different layer that skips the call entirely; use it only exact-match, keyed on everything that affects output, storing only validated results, scoped per tenant, disabled in evals.  
+Avoid semantic caching for triage (§2.13).
 
 **Q10. Is this week about leveraging LLMs effectively and serving clients?**
-About leveraging the LLM effectively: treating it as a bounded, metered, unreliable, changeable dependency (§0.1). Serving many clients (API, webhooks, queues, concurrency) is weeks 11-12, which reuse these ideas at scale.
+About leveraging the LLM effectively: treating it as a bounded, metered, unreliable, changeable dependency (§0.1).  
+Serving many clients (API, webhooks, queues, concurrency) is weeks 11-12, which reuse these ideas at scale.
 
 **Q11. With `timeout=60, max_retries=4` and one validation-retry, what is the maximum number of HTTP requests and the worst-case time?** (Section 3 task)
 10 requests (2 logical calls × 5 attempts); about 10.5 minutes (10 × 60 s + backoff). Retry layers multiply; budget each layer (§3.7).
 
 **Q12. Why keep prompts as versioned files, exactly?**
-Prompts change behavior without a compiler or tests, and outputs vary run to run, so prompts are judged by measurement; measurements need to know which prompt produced them. Files allow side-by-side versions, a checkable immutability rule, prose diffs and runtime swaps (§4.1, §4.5).
+Prompts change behavior without a compiler or tests, and outputs vary run to run, so prompts are judged by measurement; measurements need to know which prompt produced them.  
+Files allow side-by-side versions, a checkable immutability rule, prose diffs and runtime swaps (§4.1, §4.5).
 
 **Q13. What purpose do stored prompts serve? How do they help us?**
 Each old version is a known, measured, reproducible state: baseline, A/B, reproduction of a bad report, rollback, regression gate, model migration check, audit, and a record of which wording fixed which failure (§4.4).
 
 **Q14. How many prompts must be kept? How do they help in tests?**
-One per distinct LLM task × 2-3 live versions; all versions stay in git (§4.6). Tests: deterministic pytest checks on the prompt (immutability, rendering, no volatile content, token budget) and evals where the versioned prompt is the thing under test against `truth.json` (§4.7).
+One per distinct LLM task × 2-3 live versions; all versions stay in git (§4.6).  
+Tests: deterministic pytest checks on the prompt (immutability, rendering, no volatile content, token budget) and evals where the versioned prompt is the thing under test against `truth.json` (§4.7).
 
 **Q15. Why does prompt versioning matter in week 2 specifically?**
-This week you create at least three prompt variants (raw, filtered, retry feedback, plus tweaks), and the deliverable compares raw vs filtered. Without `prompt_version` on each row, the table mixes prompts and its conclusion is invalid (§4.8).
+This week you create at least three prompt variants (raw, filtered, retry feedback, plus tweaks), and the deliverable compares raw vs filtered.  
+Without `prompt_version` on each row, the table mixes prompts and its conclusion is invalid (§4.8).
 
 **Q16. Describe the Batches API in detail: how is a request made, how are results collected, in what format?**
-Endpoints, lifecycle, limits and pricing: §5.3. Request: `POST /v1/messages/batches` with `{"requests": [{"custom_id", "params"}]}`, `params` being a normal Messages body; the response is a Message Batch object with an id (§5.4). Poll until `ended` (§5.5). Results: JSONL, one line per request, any order, with `succeeded` / `errored` / `canceled` / `expired`; stream via the SDK or download from `results_url` (§5.6). Correction from the session: `custom_id` allows only `[a-zA-Z0-9_-]`, max 64 characters.
+Endpoints, lifecycle, limits and pricing: §5.3.  
+Request: `POST /v1/messages/batches` with `{"requests": [{"custom_id", "params"}]}`, `params` being a normal Messages body; the response is a Message Batch object with an id (§5.4).  
+Poll until `ended` (§5.5). Results: JSONL, one line per request, any order, with `succeeded` / `errored` / `canceled` / `expired`; stream via the SDK or download from `results_url` (§5.6).  
+Correction from the session: `custom_id` allows only `[a-zA-Z0-9_-]`, max 64 characters.
 
 **Q17. Why is JSON used so much?**
-Three reasons. JSON is the API's wire format. `.json` holds single documents (`truth.json`, scenarios, schemas) that Pydantic reads and writes directly. `.jsonl` holds streams of records (`runs.jsonl`, batch results) because it appends one line at a time, survives crashes, streams large files, works with `grep`/`tail`, and loads into pandas with `lines=True`. Human-facing files use other formats: `.md` for prompts and notes, `.log`, `.csv`.
+Three reasons. JSON is the API's wire format.  
+`.json` holds single documents (`truth.json`, scenarios, schemas) that Pydantic reads and writes directly.  
+`.jsonl` holds streams of records (`runs.jsonl`, batch results) because it appends one line at a time, survives crashes, streams large files, works with `grep`/`tail`, and loads into pandas with `lines=True`.  
+Human-facing files use other formats: `.md` for prompts and notes, `.log`, `.csv`.
 
 | Need                   | JSON array `[{...},{...}]`       | JSONL `{...}\n{...}\n`                        |
 |------------------------|----------------------------------|-----------------------------------------------|
@@ -1455,3 +1536,5 @@ Three reasons. JSON is the API's wire format. `.json` holds single documents (`t
 
 **Q18. What did week 2 cover?**
 Long inputs, prompt caching (plus response caching), failure handling, prompt versioning, batches, and the measurement that ties them together.
+
+---
