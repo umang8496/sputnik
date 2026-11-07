@@ -1,0 +1,1 @@
+CRITICAL: notifications-svc email delivery failure rate > 25% for 10m (provider HTTP 429 RateLimitExceeded)

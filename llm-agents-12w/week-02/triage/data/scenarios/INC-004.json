@@ -1,0 +1,136 @@
+{
+  "incident_id": "INC-004",
+  "service": "auth",
+  "alert": "CRITICAL: auth-service pods restarting repeatedly (OOMKilled), p99 latency elevated, login success rate dropping in prod-us-east-1",
+  "root_cause": "Release 3.14.0 changed the session cache from a bounded LRU with a 15-minute TTL to an unbounded HashMap keyed by token, so session entries are never evicted and heap grows until the container hits its memory limit and is OOMKilled.",
+  "suspected_component": "session-cache",
+  "severity": "sev1",
+  "trigger_event": {
+    "level": "INFO",
+    "component": "session-cache",
+    "message": "deploy applied: session-cache backend switched to UnboundedMap (eviction_policy=none, max_entries=unlimited) in release 3.14.0"
+  },
+  "error_signature": "OOMKilled",
+  "error_lines": [
+    {
+      "level": "ERROR",
+      "component": "kubelet",
+      "message": "Container auth-api in pod auth-api-7d9f6c5b8-{n} terminated: reason=OOMKilled exitCode=137 memoryLimit=2Gi"
+    },
+    {
+      "level": "ERROR",
+      "component": "auth-api",
+      "message": "OOMKilled: heap usage 1973MB exceeded container limit during session lookup, process terminated"
+    },
+    {
+      "level": "ERROR",
+      "component": "session-cache",
+      "message": "cache size 48213{n} entries, eviction_count=0 since process start, heap pressure critical"
+    },
+    {
+      "level": "ERROR",
+      "component": "liveness-probe",
+      "message": "Liveness probe failed for auth-api-7d9f6c5b8-{n}, restarting container after OOMKilled event"
+    },
+    {
+      "level": "ERROR",
+      "component": "auth-api",
+      "message": "OOMKilled restart count 5 within 30m for deployment auth-api, crashloop backoff engaged"
+    }
+  ],
+  "noise_lines": [
+    {
+      "level": "INFO",
+      "component": "auth-api",
+      "message": "POST /v2/login 200 duration=42ms user_id={n}"
+    },
+    {
+      "level": "INFO",
+      "component": "auth-api",
+      "message": "POST /v2/token/refresh 200 duration=18ms"
+    },
+    {
+      "level": "DEBUG",
+      "component": "jwt-signer",
+      "message": "rotated signing key kid=k{n}, next rotation in 24h"
+    },
+    {
+      "level": "INFO",
+      "component": "ingress-nginx",
+      "message": "upstream auth-api healthy endpoints=3 of 5"
+    },
+    {
+      "level": "WARN",
+      "component": "db-pool",
+      "message": "connection acquire took 310ms on replica-2, above soft threshold 250ms"
+    },
+    {
+      "level": "INFO",
+      "component": "auth-api",
+      "message": "GET /healthz 200 duration=2ms"
+    },
+    {
+      "level": "DEBUG",
+      "component": "rate-limiter",
+      "message": "bucket refill tenant=acme count={n}"
+    },
+    {
+      "level": "INFO",
+      "component": "auth-api",
+      "message": "POST /v2/logout 204 duration=11ms"
+    },
+    {
+      "level": "WARN",
+      "component": "tls-certs",
+      "message": "certificate for auth.internal.example.com expires in 27 days, renewal job scheduled"
+    },
+    {
+      "level": "INFO",
+      "component": "auth-api",
+      "message": "password policy check passed user_id={n}"
+    },
+    {
+      "level": "DEBUG",
+      "component": "metrics-agent",
+      "message": "scraped 412 samples in 38ms"
+    },
+    {
+      "level": "INFO",
+      "component": "cron",
+      "message": "nightly audit log compaction completed rows={n}"
+    },
+    {
+      "level": "WARN",
+      "component": "log-shipper",
+      "message": "buffer 80 percent full, flushing to collector"
+    },
+    {
+      "level": "INFO",
+      "component": "auth-api",
+      "message": "GET /v2/userinfo 200 duration=27ms"
+    },
+    {
+      "level": "WARN",
+      "component": "node-exporter",
+      "message": "disk usage on /var/lib/containers at 71 percent"
+    },
+    {
+      "level": "INFO",
+      "component": "auth-api",
+      "message": "MFA challenge issued method=totp user_id={n}"
+    },
+    {
+      "level": "DEBUG",
+      "component": "redis-client",
+      "message": "pipeline flush 64 commands in 1ms"
+    },
+    {
+      "level": "INFO",
+      "component": "auth-api",
+      "message": "POST /v2/login 401 duration=35ms invalid credentials"
+    }
+  ],
+  "metric": "p99_latency_ms",
+  "metric_baseline": 120.0,
+  "metric_peak": 2400.0
+}

@@ -1,0 +1,1 @@
+[SEV2] search-api p99_latency_ms > 2000 for 5m; db-primary connections saturated (pool util 100%). On-call: search-oncall

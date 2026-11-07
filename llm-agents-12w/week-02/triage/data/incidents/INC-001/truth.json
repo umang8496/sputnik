@@ -1,0 +1,12 @@
+{
+  "incident_id": "INC-001",
+  "service": "checkout",
+  "root_cause": "A config deploy at 14:02 UTC changed checkout DB pool max_connections from 40 to 4, starving request threads of connections and causing PoolTimeout errors under normal traffic.",
+  "suspected_component": "checkout-db-pool-config",
+  "severity": "sev2",
+  "error_signature": "PoolTimeout",
+  "trigger_line": 1069,
+  "trigger_text": "2026-11-01T10:07:07.200 INFO  [config-loader] Applied config rev 7f3a91c: db.pool.max_connections changed 40 -> 4 (source=deploy-pipeline, actor=ci-bot)",
+  "first_error_line": 1081,
+  "first_error_ts": "2026-11-01T10:07:12"
+}

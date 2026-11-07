@@ -1,0 +1,136 @@
+{
+  "incident_id": "INC-001",
+  "service": "checkout",
+  "alert": "PAGE: checkout-api p99_latency_ms > 2500 for 5m (SLO breach), error rate 14% on POST /v1/orders, region us-east-1",
+  "root_cause": "A config deploy at 14:02 UTC changed checkout DB pool max_connections from 40 to 4, starving request threads of connections and causing PoolTimeout errors under normal traffic.",
+  "suspected_component": "checkout-db-pool-config",
+  "severity": "sev2",
+  "trigger_event": {
+    "level": "INFO",
+    "component": "config-loader",
+    "message": "Applied config rev 7f3a91c: db.pool.max_connections changed 40 -> 4 (source=deploy-pipeline, actor=ci-bot)"
+  },
+  "error_signature": "PoolTimeout",
+  "error_lines": [
+    {
+      "level": "ERROR",
+      "component": "db-pool",
+      "message": "PoolTimeout: failed to acquire connection within 3000ms (waiters={n}, active=4/4)"
+    },
+    {
+      "level": "ERROR",
+      "component": "order-service",
+      "message": "POST /v1/orders failed with 503: upstream PoolTimeout while creating order cart_id={n}"
+    },
+    {
+      "level": "ERROR",
+      "component": "checkout-api",
+      "message": "request aborted after PoolTimeout on payment-intent lookup, trace_id={n}"
+    },
+    {
+      "level": "ERROR",
+      "component": "db-pool",
+      "message": "PoolTimeout count in last 60s={n} exceeds threshold 50"
+    },
+    {
+      "level": "WARN",
+      "component": "db-pool",
+      "message": "pool saturation 100% active=4/4 waiters={n}"
+    }
+  ],
+  "noise_lines": [
+    {
+      "level": "INFO",
+      "component": "checkout-api",
+      "message": "GET /v1/cart served in 42ms status=200"
+    },
+    {
+      "level": "DEBUG",
+      "component": "cache-client",
+      "message": "cache hit ratio 0.93 for namespace=cart"
+    },
+    {
+      "level": "INFO",
+      "component": "checkout-api",
+      "message": "POST /v1/orders/validate served in 118ms status=200"
+    },
+    {
+      "level": "INFO",
+      "component": "healthcheck",
+      "message": "liveness probe ok pod=checkout-7d9f-{n}"
+    },
+    {
+      "level": "DEBUG",
+      "component": "router",
+      "message": "route resolved /v1/shipping/quote in 3ms"
+    },
+    {
+      "level": "INFO",
+      "component": "checkout-api",
+      "message": "GET /v1/cart/summary served in 37ms status=200"
+    },
+    {
+      "level": "WARN",
+      "component": "tls-monitor",
+      "message": "certificate for internal-gateway expires in 41 days (renewal scheduled)"
+    },
+    {
+      "level": "INFO",
+      "component": "scheduler",
+      "message": "cron job inventory-sync completed in 8.2s"
+    },
+    {
+      "level": "DEBUG",
+      "component": "metrics-agent",
+      "message": "flushed {n} datapoints to collector"
+    },
+    {
+      "level": "WARN",
+      "component": "fraud-scorer",
+      "message": "model latency p95 elevated to 210ms (threshold 250ms), within bounds"
+    },
+    {
+      "level": "INFO",
+      "component": "checkout-api",
+      "message": "POST /v1/payments/authorize served in 310ms status=200"
+    },
+    {
+      "level": "DEBUG",
+      "component": "session-store",
+      "message": "session refresh completed for user shard {n}"
+    },
+    {
+      "level": "INFO",
+      "component": "queue-consumer",
+      "message": "consumed {n} messages from order-events"
+    },
+    {
+      "level": "WARN",
+      "component": "logging-pipeline",
+      "message": "log buffer 80% full, flushing"
+    },
+    {
+      "level": "INFO",
+      "component": "checkout-api",
+      "message": "GET /v1/shipping/options served in 88ms status=200"
+    },
+    {
+      "level": "DEBUG",
+      "component": "config-loader",
+      "message": "config watcher heartbeat ok"
+    },
+    {
+      "level": "INFO",
+      "component": "checkout-api",
+      "message": "GET /v1/cart served in 45ms status=200"
+    },
+    {
+      "level": "INFO",
+      "component": "scheduler",
+      "message": "cron job receipt-cleanup completed in 1.1s"
+    }
+  ],
+  "metric": "p99_latency_ms",
+  "metric_baseline": 320.0,
+  "metric_peak": 4800.0
+}

@@ -1,0 +1,31 @@
+{
+  "service": "search-api",
+  "symptom": "Search requests became slow and then failed with HTTP 503 as p99 latency rose above 2000ms (about 4.5s) and db-primary connections saturated.",
+  "first_error_ts": "2026-11-01T10:10:03Z",
+  "error_signature": "db-pool PoolTimeout: connection acquire queue depth exceeds limit, rejecting new requests (preceded by CacheMissStorm timeouts waiting for db-primary pool connections)",
+  "suspected_component": "cache",
+  "severity": "sev2",
+  "evidence": [
+    {
+      "line": 1490,
+      "text": "2026-11-01T10:09:55.600 INFO  [config-loader] config reloaded from deploy rev 7f3a9c2: SEARCH_RESULT_CACHE_TTL_SECONDS 300 -> 0"
+    },
+    {
+      "line": 1542,
+      "text": "2026-11-01T10:10:16.400 WARN  [cache-client] cache miss ratio 99.440% over last 60s; ttl_seconds=0 on result cache"
+    },
+    {
+      "line": 1509,
+      "text": "2026-11-01T10:10:03.200 ERROR [db-pool] PoolTimeout: connection acquire queue depth 817 exceeds limit, rejecting new requests"
+    },
+    {
+      "line": 1585,
+      "text": "2026-11-01T10:10:33.600 ERROR [db-pool] CacheMissStorm: timed out waiting 687ms for connection from db-primary pool (active=50/50, waiting=212)"
+    },
+    {
+      "line": 1606,
+      "text": "2026-11-01T10:10:42.000 ERROR [search-handler] PoolTimeout after retry budget exhausted, returning HTTP 503 to client"
+    }
+  ],
+  "confidence": 0.85
+}

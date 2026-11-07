@@ -1,0 +1,12 @@
+{
+  "incident_id": "INC-004",
+  "service": "auth",
+  "root_cause": "Release 3.14.0 changed the session cache from a bounded LRU with a 15-minute TTL to an unbounded HashMap keyed by token, so session entries are never evicted and heap grows until the container hits its memory limit and is OOMKilled.",
+  "suspected_component": "session-cache",
+  "severity": "sev1",
+  "error_signature": "OOMKilled",
+  "trigger_line": 1121,
+  "trigger_text": "2026-11-01T10:07:28.000 INFO  [session-cache] deploy applied: session-cache backend switched to UnboundedMap (eviction_policy=none, max_entries=unlimited) in release 3.14.0",
+  "first_error_line": 1144,
+  "first_error_ts": "2026-11-01T10:07:37.200000"
+}

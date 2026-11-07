@@ -1,0 +1,146 @@
+{
+  "incident_id": "INC-002",
+  "service": "search",
+  "alert": "[SEV2] search-api p99_latency_ms > 2000 for 5m; db-primary connections saturated (pool util 100%). On-call: search-oncall",
+  "root_cause": "A config deploy to search-api set SEARCH_RESULT_CACHE_TTL_SECONDS from 300 to 0, so every search result cache entry expired immediately and all queries fell through to the database, causing a cache stampede on db-primary.",
+  "suspected_component": "search-api result cache configuration (SEARCH_RESULT_CACHE_TTL_SECONDS)",
+  "severity": "sev2",
+  "trigger_event": {
+    "level": "INFO",
+    "component": "config-loader",
+    "message": "config reloaded from deploy rev 7f3a9c2: SEARCH_RESULT_CACHE_TTL_SECONDS 300 -> 0"
+  },
+  "error_signature": "CacheMissStorm",
+  "error_lines": [
+    {
+      "level": "ERROR",
+      "component": "db-pool",
+      "message": "CacheMissStorm: timed out waiting {n}ms for connection from db-primary pool (active=50/50, waiting=212)"
+    },
+    {
+      "level": "ERROR",
+      "component": "search-handler",
+      "message": "request failed: CacheMissStorm acquiring db connection for query_hash=search:q:{n}"
+    },
+    {
+      "level": "WARN",
+      "component": "cache-client",
+      "message": "cache miss ratio 99.{n}% over last 60s; ttl_seconds=0 on result cache"
+    },
+    {
+      "level": "ERROR",
+      "component": "search-handler",
+      "message": "PoolTimeout after retry budget exhausted, returning HTTP 503 to client"
+    },
+    {
+      "level": "ERROR",
+      "component": "db-pool",
+      "message": "PoolTimeout: connection acquire queue depth {n} exceeds limit, rejecting new requests"
+    }
+  ],
+  "noise_lines": [
+    {
+      "level": "INFO",
+      "component": "search-indexer",
+      "message": "index segment merge completed, segments reduced from {n} to {n}"
+    },
+    {
+      "level": "DEBUG",
+      "component": "auth-middleware",
+      "message": "JWT validated for subject user-{n}"
+    },
+    {
+      "level": "INFO",
+      "component": "health-check",
+      "message": "liveness probe ok for pod search-api-{n}"
+    },
+    {
+      "level": "WARN",
+      "component": "tls-monitor",
+      "message": "certificate for search-admin.internal expires in 41 days"
+    },
+    {
+      "level": "INFO",
+      "component": "search-handler",
+      "message": "served query in {n}ms from cache"
+    },
+    {
+      "level": "DEBUG",
+      "component": "ranker",
+      "message": "reranked {n} candidates with model v12"
+    },
+    {
+      "level": "INFO",
+      "component": "metrics-agent",
+      "message": "flushed {n} metric points to collector"
+    },
+    {
+      "level": "INFO",
+      "component": "search-indexer",
+      "message": "nightly snapshot to object store started"
+    },
+    {
+      "level": "WARN",
+      "component": "db-replica",
+      "message": "replication lag 4{n}ms on replica-2, within threshold"
+    },
+    {
+      "level": "INFO",
+      "component": "autoscaler",
+      "message": "search-api desired replicas unchanged at {n}"
+    },
+    {
+      "level": "DEBUG",
+      "component": "query-parser",
+      "message": "normalized query tokens count={n}"
+    },
+    {
+      "level": "INFO",
+      "component": "cache-client",
+      "message": "connected to redis cluster search-cache-02"
+    },
+    {
+      "level": "WARN",
+      "component": "disk-monitor",
+      "message": "log volume /var/log 78% used on search-indexer-{n}"
+    },
+    {
+      "level": "INFO",
+      "component": "feature-flags",
+      "message": "flag ranker_v12 evaluated true for {n}% of traffic"
+    },
+    {
+      "level": "DEBUG",
+      "component": "search-handler",
+      "message": "suggestion endpoint returned {n} items"
+    },
+    {
+      "level": "INFO",
+      "component": "deploy-bot",
+      "message": "deploy rev 7f3a9c2 completed on search-api canary group"
+    },
+    {
+      "level": "INFO",
+      "component": "search-handler",
+      "message": "request completed with status 200 in {n}ms"
+    },
+    {
+      "level": "WARN",
+      "component": "rate-limiter",
+      "message": "client burst above soft limit for api key {n}, throttling applied"
+    },
+    {
+      "level": "WARN",
+      "component": "gc-monitor",
+      "message": "GC pause {n}ms on search-api-{n}, heap 71% after collection"
+    },
+    {
+      "level": "INFO",
+      "component": "config-loader",
+      "message": "feature flag sync completed, {n} flags unchanged"
+    }
+  ],
+  "metric": "p99_latency_ms",
+  "metric_baseline": 180.0,
+  "metric_peak": 4200.0
+}

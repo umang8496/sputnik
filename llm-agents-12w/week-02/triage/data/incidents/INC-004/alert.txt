@@ -1,0 +1,1 @@
+CRITICAL: auth-service pods restarting repeatedly (OOMKilled), p99 latency elevated, login success rate dropping in prod-us-east-1

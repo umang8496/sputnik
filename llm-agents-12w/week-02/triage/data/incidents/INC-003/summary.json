@@ -1,0 +1,27 @@
+{
+  "service": "payments-api",
+  "symptom": "Card authorizations fail and are declined to clients with 503 because the acquirer-gw TLS certificate has expired, dropping authorization success to about 40%.",
+  "first_error_ts": "2026-11-01T10:07:36Z",
+  "error_signature": "TLS_CERT_EXPIRED: handshake failed host=gw.acquirer.example.net notAfter=2024-06-17T00:00:00Z",
+  "suspected_component": "config (truststore/certificate for acquirer-gw)",
+  "severity": "sev1",
+  "evidence": [
+    {
+      "line": 1122,
+      "text": "2026-11-01T10:07:28.400 INFO  [config-loader] truststore reloaded: upstream=acquirer-gw path=/etc/payments/trust/acquirer-ca-2023.pem pinned=true release=2024.06.17-2"
+    },
+    {
+      "line": 1141,
+      "text": "2026-11-01T10:07:36.000 ERROR [acquirer-gw-client] TLS_CERT_EXPIRED: retry 622/3 exhausted host=gw.acquirer.example.net"
+    },
+    {
+      "line": 1157,
+      "text": "2026-11-01T10:07:42.400 ERROR [auth-worker] circuit breaker OPEN upstream=acquirer-gw after TLS_CERT_EXPIRED failures=5"
+    },
+    {
+      "line": 1163,
+      "text": "2026-11-01T10:07:44.800 ERROR [checkout-api] payment declined to client code=503 cause=TLS_CERT_EXPIRED upstream=acquirer-gw"
+    }
+  ],
+  "confidence": 0.8
+}
