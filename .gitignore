@@ -46,3 +46,12 @@ env/
 # ---- local scratch ----
 *.bak
 *.log.tmp
+
+# ---- language model artifacts ----
+*.pt
+corpus.txt
+
+# ---- miscellaneous ----
+*.bin
+*.sqlite3
+*.pdf
