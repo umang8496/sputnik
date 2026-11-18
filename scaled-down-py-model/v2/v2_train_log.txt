@@ -1,0 +1,43 @@
+params 12,194,688 | device mps | train tokens 69,298,375 | 10,000 steps x 8,192 = 82M tokens = 1.2 passes
+step      0 | lr 0.00000 | train 7.701 | held-out 7.708 | 0 tok/s | ETA -
+step    250 | lr 0.00084 | train 4.296 | held-out 4.292 | 18,925 tok/s | ETA 70 min
+step    500 | lr 0.00100 | train 3.574 | held-out 3.575 | 15,165 tok/s | ETA 86 min
+step    750 | lr 0.00100 | train 3.307 | held-out 3.158 | 14,232 tok/s | ETA 89 min
+step   1000 | lr 0.00099 | train 2.972 | held-out 3.000 | 14,630 tok/s | ETA 84 min
+step   1250 | lr 0.00098 | train 2.564 | held-out 2.577 | 15,602 tok/s | ETA 77 min
+step   1500 | lr 0.00097 | train 2.346 | held-out 2.310 | 14,599 tok/s | ETA 79 min
+step   1750 | lr 0.00095 | train 2.187 | held-out 2.215 | 14,632 tok/s | ETA 77 min
+step   2000 | lr 0.00093 | train 2.195 | held-out 2.235 | 14,596 tok/s | ETA 75 min
+step   2250 | lr 0.00091 | train 2.038 | held-out 2.015 | 14,153 tok/s | ETA 75 min
+step   2500 | lr 0.00089 | train 2.037 | held-out 2.009 | 14,012 tok/s | ETA 73 min
+step   2750 | lr 0.00087 | train 1.941 | held-out 2.002 | 14,603 tok/s | ETA 68 min
+step   3000 | lr 0.00084 | train 1.925 | held-out 1.969 | 14,328 tok/s | ETA 67 min
+step   3250 | lr 0.00081 | train 1.870 | held-out 1.891 | 14,115 tok/s | ETA 65 min
+step   3500 | lr 0.00078 | train 1.782 | held-out 1.864 | 13,757 tok/s | ETA 65 min
+step   3750 | lr 0.00075 | train 1.814 | held-out 1.759 | 13,250 tok/s | ETA 64 min
+step   4000 | lr 0.00071 | train 1.790 | held-out 1.857 | 13,178 tok/s | ETA 62 min
+step   4250 | lr 0.00068 | train 1.715 | held-out 1.847 | 13,192 tok/s | ETA 60 min
+step   4500 | lr 0.00064 | train 1.719 | held-out 1.831 | 13,226 tok/s | ETA 57 min
+step   4750 | lr 0.00061 | train 1.722 | held-out 1.761 | 13,110 tok/s | ETA 55 min
+step   5000 | lr 0.00057 | train 1.619 | held-out 1.767 | 13,093 tok/s | ETA 52 min
+step   5250 | lr 0.00054 | train 1.683 | held-out 1.790 | 13,076 tok/s | ETA 50 min
+step   5500 | lr 0.00050 | train 1.628 | held-out 1.721 | 13,152 tok/s | ETA 47 min
+step   5750 | lr 0.00046 | train 1.672 | held-out 1.697 | 13,123 tok/s | ETA 44 min
+step   6000 | lr 0.00043 | train 1.649 | held-out 1.646 | 13,152 tok/s | ETA 42 min
+step   6250 | lr 0.00039 | train 1.711 | held-out 1.637 | 13,111 tok/s | ETA 39 min
+step   6500 | lr 0.00036 | train 1.618 | held-out 1.613 | 13,162 tok/s | ETA 36 min
+step   6750 | lr 0.00033 | train 1.615 | held-out 1.656 | 13,147 tok/s | ETA 34 min
+step   7000 | lr 0.00030 | train 1.609 | held-out 1.624 | 13,161 tok/s | ETA 31 min
+step   7250 | lr 0.00027 | train 1.548 | held-out 1.603 | 13,149 tok/s | ETA 29 min
+step   7500 | lr 0.00024 | train 1.594 | held-out 1.642 | 13,236 tok/s | ETA 26 min
+step   7750 | lr 0.00021 | train 1.525 | held-out 1.637 | 13,190 tok/s | ETA 23 min
+step   8000 | lr 0.00019 | train 1.568 | held-out 1.654 | 13,236 tok/s | ETA 21 min
+step   8250 | lr 0.00017 | train 1.458 | held-out 1.594 | 13,201 tok/s | ETA 18 min
+step   8500 | lr 0.00015 | train 1.456 | held-out 1.570 | 13,667 tok/s | ETA 15 min
+step   8750 | lr 0.00014 | train 1.493 | held-out 1.635 | 13,961 tok/s | ETA 12 min
+step   9000 | lr 0.00012 | train 1.524 | held-out 1.610 | 14,066 tok/s | ETA 10 min
+step   9250 | lr 0.00011 | train 1.501 | held-out 1.503 | 14,047 tok/s | ETA 7 min
+step   9500 | lr 0.00011 | train 1.522 | held-out 1.497 | 14,062 tok/s | ETA 5 min
+step   9750 | lr 0.00010 | train 1.527 | held-out 1.533 | 14,051 tok/s | ETA 2 min
+step  10000 | lr 0.00010 | train 1.523 | held-out 1.480 | 14,069 tok/s | ETA 0 min
+done, checkpoint at /Users/umang.mishra/github-umang8496/sputnik-repo/sputnik/scaled-down-py-model/v2/v2_ckpt.pt

@@ -50,6 +50,7 @@ env/
 # ---- language model artifacts ----
 *.pt
 corpus.txt
+*.pkl
 
 # ---- miscellaneous ----
 *.bin
